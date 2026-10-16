@@ -1,0 +1,46 @@
+name: Temporary build check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+          bundler-cache: true
+          cache-version: 0
+      - name: Build with Jekyll
+        run: bundle exec jekyll build --baseurl "/LJT-Homepage"
+        env:
+          JEKYLL_ENV: production
+      - name: Show built pages
+        run: find _site -type f -name '*.html' | sort
+      - name: Show homepage text
+        run: |
+          python3 - <<'PY'
+          import re, html
+          t = open('_site/index.html', encoding='utf-8').read()
+          t = re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', t, flags=re.S)
+          t = re.sub(r'<[^>]+>', ' ', t)
+          t = html.unescape(t)
+          t = re.sub(r'\s+', ' ', t)
+          print(t[:3500])
+          PY
+      - name: Show publications page text
+        run: |
+          python3 - <<'PY'
+          import re, html
+          t = open('_site/publications/index.html', encoding='utf-8').read()
+          t = re.sub(r'<(script|style)[^>]*>.*?</\1>', ' ', t, flags=re.S)
+          t = re.sub(r'<[^>]+>', ' ', t)
+          t = html.unescape(t)
+          t = re.sub(r'\s+', ' ', t)
+          print(t[:3500])
+          PY
